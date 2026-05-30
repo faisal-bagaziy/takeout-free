@@ -17,3 +17,4 @@ export const schema = table('leaderboardEntry')
   .primaryKey('id')
 
 // No client mutations — server-only upserts in scoring job
+export const mutate = {}

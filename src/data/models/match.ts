@@ -25,3 +25,4 @@ export const schema = table('match')
   .primaryKey('id')
 
 // No client mutations — server-only writes via Drizzle in the scoring job
+export const mutate = {}
