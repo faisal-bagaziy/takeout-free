@@ -105,8 +105,8 @@ function makeGroupMatches(
   const matchdays = [1, 1, 2, 2, 3, 3]
 
   return pairs.map(([i, j], idx) => {
-    const homeKey = teamKeys[i]
-    const awayKey = teamKeys[j]
+    const homeKey = teamKeys[i]!
+    const awayKey = teamKeys[j]!
     const homeTeam = TEAMS[homeKey] || { name: homeKey, flag: '🏳' }
     const awayTeam = TEAMS[awayKey] || { name: awayKey, flag: '🏳' }
 
@@ -117,16 +117,16 @@ function makeGroupMatches(
       awayTeam: awayTeam.name,
       homeFlag: homeTeam.flag,
       awayFlag: awayTeam.flag,
-      kickoffAt: d(matchdayDates[idx]),
+      kickoffAt: d(matchdayDates[idx]!),
       homeScore: null,
       awayScore: null,
       avgHomeScore: null,
       avgAwayScore: null,
       status: 'scheduled' as const,
-      matchday: matchdays[idx],
+      matchday: matchdays[idx]!,
       stage: 'group' as const,
       group,
-      venue: VENUES[matchCounter % VENUES.length],
+      venue: VENUES[matchCounter % VENUES.length]!,
     }
   })
 }
@@ -185,7 +185,7 @@ async function seed() {
   const db = getDb()
 
   const groupMatches = Object.entries(GROUPS).flatMap(([group, teams]) =>
-    makeGroupMatches(group, teams, GROUP_DATES[group]),
+    makeGroupMatches(group, teams, GROUP_DATES[group]!),
   )
 
   const allMatches = [
@@ -206,7 +206,8 @@ async function seed() {
   console.log(`Seeding ${allMatches.length} matches...`)
 
   await db.delete(match)
-  await db.insert(match).values(allMatches)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await db.insert(match).values(allMatches as any)
 
   console.log(`✅ Seeded ${allMatches.length} matches (${groupMatches.length} group stage + ${knockoutMatches.length} knockout)`)
   process.exit(0)
