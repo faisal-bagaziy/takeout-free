@@ -54,3 +54,20 @@ export const match = pgTable(
     index('match_matchday_idx').on(table.matchday),
   ],
 )
+
+export const prediction = pgTable(
+  'prediction',
+  {
+    id: text('id').primaryKey(),
+    userId: text('userId').notNull(),
+    matchId: text('matchId').notNull(),
+    homeScore: integer('homeScore').notNull(),
+    awayScore: integer('awayScore').notNull(),
+    pointsAwarded: integer('pointsAwarded'),
+    createdAt: bigint('createdAt', { mode: 'number' }).notNull(),
+  },
+  (table) => [
+    index('prediction_userId_idx').on(table.userId),
+    index('prediction_matchId_idx').on(table.matchId),
+  ],
+)
