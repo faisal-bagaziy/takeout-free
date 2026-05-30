@@ -13,6 +13,9 @@ interface FeedItemProps {
   actualAway?: number | null
   pointsAwarded?: number | null
   status: string
+  stage: string
+  group?: string | null
+  matchday?: number | null
   createdAt: number
 }
 
@@ -24,6 +27,19 @@ function timeAgo(ts: number): string {
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h ago`
   return `${Math.floor(h / 24)}d ago`
+}
+
+function stageLabel(stage: string, group?: string | null, matchday?: number | null): string {
+  if (stage === 'group') return `Group ${group ?? ''} · MD${matchday ?? ''}`
+  const labels: Record<string, string> = {
+    'round-of-32': 'Round of 32',
+    'round-of-16': 'Round of 16',
+    quarterfinal: 'Quarterfinal',
+    semifinal: 'Semifinal',
+    'third-place': 'Third Place',
+    final: '🏆 Final',
+  }
+  return labels[stage] ?? stage.toUpperCase()
 }
 
 export function FeedItem({
@@ -39,8 +55,12 @@ export function FeedItem({
   actualAway,
   pointsAwarded,
   status,
+  stage,
+  group,
+  matchday,
   createdAt,
 }: FeedItemProps) {
+  const isLive = status === 'live'
   const isFinished = status === 'finished'
   const hasResult = isFinished && actualHome != null && actualAway != null
   const name = userName || 'Anonymous'
@@ -50,107 +70,160 @@ export function FeedItem({
     .map((w: string) => w[0]?.toUpperCase() ?? '')
     .join('')
 
-  const pointsBg = pointsAwarded === 3 ? '$green3' : pointsAwarded === 1 ? '$blue3' : '$color3'
-  const pointsBorder = pointsAwarded === 3 ? '$green7' : pointsAwarded === 1 ? '$blue7' : '$color6'
-  const pointsColor = pointsAwarded === 3 ? '$green10' : pointsAwarded === 1 ? '$blue10' : '$color9'
-  const pointsLabel =
-    pointsAwarded === 3
-      ? '🎯 Exact · +3 pts'
-      : pointsAwarded === 1
-        ? '✓ One correct · +1 pt'
-        : hasResult
-          ? '✗ Missed · +0 pts'
-          : null
+  const isExact = pointsAwarded === 3
+  const isPartial = pointsAwarded === 1
+  const isMissed = hasResult && pointsAwarded === 0
 
   return (
-    <YStack bg="$color2" rounded="$4" borderWidth={1} borderColor="$borderColor" p="$3" gap="$2">
-      {/* Header */}
-      <XStack items="center" gap="$2">
-        <XStack
-          width={28}
-          height={28}
-          rounded={14 as any}
-          bg="$color7"
-          items="center"
-          justify="center"
-        >
-          <SizableText size="$1" fontWeight="700" color="white">
-            {initials || '?'}
-          </SizableText>
-        </XStack>
-        <SizableText size="$2" fontWeight="600" color="$color12" flex={1}>
-          {name}
-          {userCountry ? `  ${userCountry}` : ''}
-        </SizableText>
-        <SizableText size="$1" color="$color8">
-          {timeAgo(createdAt)}
-        </SizableText>
-      </XStack>
+    <YStack
+      bg="$color2"
+      rounded="$4"
+      borderWidth={1}
+      borderColor={isExact ? '$green6' : isPartial ? '$blue6' : '$borderColor'}
+      overflow="hidden"
+    >
+      {/* Top accent bar for exact score */}
+      {isExact && <YStack height={3} bg="$green8" />}
+      {isPartial && <YStack height={3} bg="$blue8" />}
 
-      {/* Match + scores */}
-      <XStack items="center" gap="$2">
-        <XStack flex={1} justify="flex-end" items="center" gap="$1">
-          <SizableText
-            size="$2"
-            fontWeight="600"
-            color="$color11"
-            style={{ textAlign: 'right' }}
-            numberOfLines={1}
-          >
-            {homeTeam}
-          </SizableText>
-          <SizableText size="$3">{homeFlag}</SizableText>
-        </XStack>
-
-        <YStack items="center" gap="$0.5" minWidth={90}>
-          <SizableText size="$1" color="$color9" textTransform="uppercase" letterSpacing={1}>
-            Predicted
-          </SizableText>
-          <XStack items="center" gap="$1">
-            <XStack width={28} height={28} bg="$color3" rounded="$2" items="center" justify="center">
-              <SizableText size="$3" fontWeight="700" color="$color12">
-                {predictedHome}
-              </SizableText>
-            </XStack>
-            <SizableText color="$color8" size="$3">–</SizableText>
-            <XStack width={28} height={28} bg="$color3" rounded="$2" items="center" justify="center">
-              <SizableText size="$3" fontWeight="700" color="$color12">
-                {predictedAway}
-              </SizableText>
-            </XStack>
-          </XStack>
-          {hasResult && (
-            <SizableText size="$1" color="$color8">
-              Final: {actualHome}–{actualAway}
-            </SizableText>
-          )}
-        </YStack>
-
-        <XStack flex={1} justify="flex-start" items="center" gap="$1">
-          <SizableText size="$3">{awayFlag}</SizableText>
-          <SizableText size="$2" fontWeight="600" color="$color11" numberOfLines={1}>
-            {awayTeam}
-          </SizableText>
-        </XStack>
-      </XStack>
-
-      {/* Points badge */}
-      {pointsLabel && (
-        <XStack justify="center">
+      <YStack p="$3" gap="$3">
+        {/* Header: avatar + name + stage + time */}
+        <XStack items="center" gap="$2">
           <XStack
-            bg={pointsBg}
-            borderColor={pointsBorder}
-            borderWidth={1}
-            rounded="$10"
-            px="$3"
-            py="$0.5"
+            width={32}
+            height={32}
+            rounded={16 as any}
+            bg="$color7"
+            items="center"
+            justify="center"
+            flexShrink={0}
           >
-            <SizableText size="$1" color={pointsColor} fontWeight="600">
-              {pointsLabel}
+            <SizableText size="$1" fontWeight="700" color="white">
+              {initials || '?'}
+            </SizableText>
+          </XStack>
+
+          <YStack flex={1}>
+            <XStack items="center" gap="$1.5">
+              <SizableText size="$3" fontWeight="700" color="$color12" numberOfLines={1}>
+                {name}
+              </SizableText>
+              {userCountry && <SizableText size="$3">{userCountry}</SizableText>}
+            </XStack>
+            <SizableText size="$1" color="$color8">
+              {stageLabel(stage, group, matchday)}
+            </SizableText>
+          </YStack>
+
+          <XStack items="center" gap="$1">
+            {isLive && (
+              <XStack bg="$red3" borderColor="$red7" borderWidth={1} rounded="$10" px="$2" py="$0.5">
+                <SizableText size="$1" color="$red10" fontWeight="700">● LIVE</SizableText>
+              </XStack>
+            )}
+            <SizableText size="$1" color="$color8">{timeAgo(createdAt)}</SizableText>
+          </XStack>
+        </XStack>
+
+        {/* Match */}
+        <XStack items="center" gap="$2">
+          {/* Home */}
+          <XStack flex={1} items="center" justify="flex-end" gap="$1.5">
+            <SizableText
+              size="$2"
+              fontWeight="600"
+              color="$color12"
+              numberOfLines={1}
+              style={{ textAlign: 'right' }}
+            >
+              {homeTeam}
+            </SizableText>
+            <SizableText size="$4">{homeFlag}</SizableText>
+          </XStack>
+
+          {/* Scores */}
+          <YStack items="center" gap="$1">
+            <XStack items="center" gap="$1">
+              <XStack
+                width={32}
+                height={32}
+                bg={hasResult && actualHome === predictedHome ? '$green3' : hasResult ? '$red3' : '$color3'}
+                borderWidth={hasResult ? 1 : 0}
+                borderColor={hasResult && actualHome === predictedHome ? '$green7' : '$red7'}
+                rounded="$2"
+                items="center"
+                justify="center"
+              >
+                <SizableText
+                  size="$4"
+                  fontWeight="800"
+                  color={hasResult && actualHome === predictedHome ? '$green10' : hasResult ? '$red10' : '$color12'}
+                >
+                  {predictedHome}
+                </SizableText>
+              </XStack>
+              <SizableText color="$color7" size="$3" fontWeight="300">–</SizableText>
+              <XStack
+                width={32}
+                height={32}
+                bg={hasResult && actualAway === predictedAway ? '$green3' : hasResult ? '$red3' : '$color3'}
+                borderWidth={hasResult ? 1 : 0}
+                borderColor={hasResult && actualAway === predictedAway ? '$green7' : '$red7'}
+                rounded="$2"
+                items="center"
+                justify="center"
+              >
+                <SizableText
+                  size="$4"
+                  fontWeight="800"
+                  color={hasResult && actualAway === predictedAway ? '$green10' : hasResult ? '$red10' : '$color12'}
+                >
+                  {predictedAway}
+                </SizableText>
+              </XStack>
+            </XStack>
+            {hasResult && (
+              <SizableText size="$1" color="$color8">
+                Final {actualHome}–{actualAway}
+              </SizableText>
+            )}
+            {!hasResult && (
+              <SizableText size="$1" color="$color8">predicted</SizableText>
+            )}
+          </YStack>
+
+          {/* Away */}
+          <XStack flex={1} items="center" justify="flex-start" gap="$1.5">
+            <SizableText size="$4">{awayFlag}</SizableText>
+            <SizableText size="$2" fontWeight="600" color="$color12" numberOfLines={1}>
+              {awayTeam}
             </SizableText>
           </XStack>
         </XStack>
-      )}
+
+        {/* Result badge */}
+        {(isExact || isPartial || isMissed) && (
+          <XStack justify="center">
+            <XStack
+              bg={isExact ? '$green3' : isPartial ? '$blue3' : '$color3'}
+              borderColor={isExact ? '$green7' : isPartial ? '$blue7' : '$color6'}
+              borderWidth={1}
+              rounded="$10"
+              px="$3"
+              py="$0.5"
+              gap="$1"
+            >
+              <SizableText
+                size="$1"
+                fontWeight="700"
+                color={isExact ? '$green10' : isPartial ? '$blue10' : '$color9'}
+              >
+                {isExact ? '🎯 Exact score · +3 pts' : isPartial ? '✓ One correct · +1 pt' : '✗ No points'}
+              </SizableText>
+            </XStack>
+          </XStack>
+        )}
+      </YStack>
     </YStack>
   )
 }

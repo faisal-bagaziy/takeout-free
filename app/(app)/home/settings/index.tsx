@@ -1,12 +1,12 @@
-import { Link, type Href } from 'one'
+import { type Href, Link } from 'one'
 import { Linking } from 'react-native'
 import { isWeb, ScrollView, SizableText, View, XStack, YStack } from 'tamagui'
 
 import { APP_NAME_LOWERCASE, DOMAIN } from '~/constants/app'
 import { useLogout } from '~/features/auth/useLogout'
+import { ProfileHeader } from '~/features/settings/ProfileHeader'
 import { CaretRightIcon } from '~/interface/icons/phosphor/CaretRightIcon'
 import { DoorIcon } from '~/interface/icons/phosphor/DoorIcon'
-import { UserIcon } from '~/interface/icons/phosphor/UserIcon'
 import { PageLayout } from '~/interface/pages/PageLayout'
 import { SepHeading } from '~/interface/text/Headings'
 
@@ -51,9 +51,7 @@ function SettingRow({ item }: { item: SettingItem }) {
     </XStack>
   )
 
-  if (item.onPress) {
-    return content
-  }
+  if (item.onPress) return content
 
   if (item.href) {
     if (item.external && !isWeb) {
@@ -98,17 +96,6 @@ export function ProfileSettingsPage() {
       title: 'Account',
       items: [
         {
-          id: 'profile',
-          title: 'Edit Profile',
-          icon: UserIcon,
-          href: '/home/settings/edit-profile',
-        },
-      ],
-    },
-    {
-      title: 'Other',
-      items: [
-        {
           id: 'logout',
           title: 'Log Out',
           icon: DoorIcon,
@@ -126,6 +113,8 @@ export function ProfileSettingsPage() {
         contentInsetAdjustmentBehavior="automatic"
       >
         <YStack flex={1} flexBasis="auto" pb="$10">
+          <ProfileHeader />
+
           {sections.map((section) => (
             <YStack key={section.title} mb="$6" ml="$4">
               <SepHeading>{section.title}</SepHeading>
@@ -137,24 +126,16 @@ export function ProfileSettingsPage() {
             </YStack>
           ))}
 
-          <LogoAndVersion />
+          <YStack items="center" pb={100} pt="$4">
+            <SizableText color="$color10" fontWeight="bold">
+              {APP_NAME_LOWERCASE}
+            </SizableText>
+            <SizableText size="$1" color="$color10" mt="$2">
+              WC2026 Edition · v1.0.0
+            </SizableText>
+          </YStack>
         </YStack>
       </ScrollView>
     </PageLayout>
-  )
-}
-
-function LogoAndVersion() {
-  return (
-    <YStack items="center" pb={100} pt="$4">
-      <XStack items="center" gap="$2">
-        <SizableText color="$color10" fontWeight="bold">
-          {APP_NAME_LOWERCASE}
-        </SizableText>
-      </XStack>
-      <SizableText size="$1" color="$color10" mt="$2">
-        v1.0.0
-      </SizableText>
-    </YStack>
   )
 }
