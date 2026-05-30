@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { FlatList } from 'react-native'
 import { isWeb, SizableText, Spinner, YStack } from 'tamagui'
 
 import { useAuth } from '~/features/auth/client/authClient'
+import { useFollowActions, useFollowMap } from '~/features/social/useFollow'
 import { H1 } from '~/interface/text/Headings'
 import { LeaderboardRow } from './LeaderboardRow'
 import { useLeaderboard, useMyLeaderboardEntry } from './useLeaderboard'
@@ -12,12 +13,26 @@ export function LeaderboardScreen() {
   const myUserId = auth?.user?.id
   const { entries, isLoading } = useLeaderboard()
   const { myEntry } = useMyLeaderboardEntry()
+  const followMap = useFollowMap()
+  const { follow, unfollow } = useFollowActions()
 
   const myRank = useMemo(() => {
     if (!myUserId) return null
     const idx = entries.findIndex((e) => e.userId === myUserId)
     return idx >= 0 ? idx + 1 : null
   }, [entries, myUserId])
+
+  const handleFollowToggle = useCallback(
+    (userId: string) => {
+      const followId = followMap.get(userId)
+      if (followId) {
+        unfollow(followId)
+      } else {
+        follow(userId)
+      }
+    },
+    [followMap, follow, unfollow],
+  )
 
   return (
     <YStack
@@ -51,6 +66,8 @@ export function LeaderboardScreen() {
               entry={item}
               rank={index + 1}
               isMe={item.userId === myUserId}
+              isFollowing={followMap.has(item.userId)}
+              onFollowToggle={() => handleFollowToggle(item.userId)}
             />
           )}
           ListEmptyComponent={
