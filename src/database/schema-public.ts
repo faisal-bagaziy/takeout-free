@@ -7,6 +7,7 @@ export const userPublic = pgTable(
     name: text('name'),
     username: text('username'),
     image: text('image'),
+    country: text('country'),
     joinedAt: timestamp('joinedAt', { mode: 'string' }).defaultNow().notNull(),
   },
   (table) => [index('userPublic_username_idx').on(table.username)],

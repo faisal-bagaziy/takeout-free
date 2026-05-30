@@ -11,6 +11,7 @@ export const schema = table('userPublic')
     name: string().optional(),
     username: string().optional(),
     image: string().optional(),
+    country: string().optional(),
     joinedAt: number(),
   })
   .primaryKey('id')
