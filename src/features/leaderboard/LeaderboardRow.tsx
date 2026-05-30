@@ -19,23 +19,23 @@ export function LeaderboardRow({ entry, rank, isMe }: LeaderboardRowProps) {
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('')
 
-  const rankColor = RANK_COLORS[rank] ?? (isMe ? '$blue10' : '$color11')
+  const rankColor = (RANK_COLORS[rank] ?? (isMe ? '$blue10' : '$color11')) as '$blue10' | '$color11'
 
   return (
     <YStack
-      backgroundColor={isMe ? '$blue2' : '$color2'}
+      bg={isMe ? '$blue2' : '$color2'}
       borderWidth={1}
       borderColor={isMe ? '$blue6' : '$borderColor'}
-      borderRadius="$4"
-      paddingHorizontal="$3"
-      paddingVertical="$2"
+      rounded="$4"
+      px="$3"
+      py="$2"
       gap="$1"
     >
       <XStack items="center" gap="$3">
         {/* Rank */}
         <SizableText
           width={24}
-          textAlign="center"
+          style={{ textAlign: 'center' }}
           size="$3"
           fontWeight="800"
           color={rankColor}
@@ -47,8 +47,8 @@ export function LeaderboardRow({ entry, rank, isMe }: LeaderboardRowProps) {
         <XStack
           width={32}
           height={32}
-          borderRadius={16}
-          backgroundColor={isMe ? '$blue8' : '$color8'}
+          rounded={16 as any}
+          bg={isMe ? '$blue8' : '$color8'}
           items="center"
           justify="center"
         >
@@ -74,14 +74,14 @@ export function LeaderboardRow({ entry, rank, isMe }: LeaderboardRowProps) {
         <SizableText
           size="$4"
           fontWeight="800"
-          color={isMe ? '$blue10' : rank <= 3 ? rankColor : '$color12'}
+          color={isMe ? '$blue10' : rank <= 3 ? (rankColor as any) : '$color12'}
         >
           {entry.totalPoints} pts
         </SizableText>
       </XStack>
 
       {/* Stats sub-row */}
-      <XStack gap="$3" paddingLeft={56}>
+      <XStack gap="$3" pl={56 as any}>
         <SizableText size="$1" color={isMe ? '$blue9' : '$color9'}>
           🎯 {entry.exactScores} exact
         </SizableText>

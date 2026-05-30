@@ -7,14 +7,14 @@ export function TabsLayout() {
   return (
     <>
       <MainHeader />
-      <XStack gap="$4" paddingHorizontal="$4" paddingTop="$2" borderBottomWidth={1} borderBottomColor="$borderColor">
-        <Link href="/home/predict" style={{ textDecoration: 'none' }}>
+      <XStack gap="$4" px="$4" pt="$2" borderBottomWidth={1} borderBottomColor="$borderColor">
+        <Link href="/home/predict">
           Predict
         </Link>
-        <Link href="/home/leaderboard" style={{ textDecoration: 'none' }}>
+        <Link href="/home/leaderboard">
           Leaderboard
         </Link>
-        <Link href="/home/feed" style={{ textDecoration: 'none' }}>
+        <Link href="/home/feed">
           Feed
         </Link>
       </XStack>

@@ -37,7 +37,7 @@ export function LeaderboardScreen() {
   const currentRank = tab === 'all' ? myRank : myFriendsRank
 
   return (
-    <YStack flex={1} backgroundColor="$background">
+    <YStack flex={1} bg="$background">
       <PageContainer>
         <H1 py="$3" size="$6">Leaderboard</H1>
 
@@ -87,8 +87,8 @@ export function LeaderboardScreen() {
           }
           ListFooterComponent={
             myEntry && myUserId && !entries.some((e) => e.userId === myUserId) ? (
-              <YStack paddingTop="$2">
-                <SizableText size="$1" color="$color9" textAlign="center" pb="$2">
+              <YStack pt="$2">
+                <SizableText size="$1" color="$color9" style={{ textAlign: 'center' }} pb="$2">
                   Your rank
                 </SizableText>
                 <LeaderboardRow

@@ -6,7 +6,7 @@ import type { OneRouter } from 'one'
 declare module 'one' {
   export namespace OneRouter {
     export interface __routes<T extends string = string> extends Record<string, unknown> {
-      StaticRoutes: 
+      StaticRoutes:
         | `/`
         | `/(app)`
         | `/(app)/auth`
@@ -16,8 +16,16 @@ declare module 'one' {
         | `/(app)/home/(tabs)`
         | `/(app)/home/(tabs)/feed`
         | `/(app)/home/(tabs)/feed/`
+        | `/(app)/home/(tabs)/leaderboard`
+        | `/(app)/home/(tabs)/leaderboard/`
+        | `/(app)/home/(tabs)/predict`
+        | `/(app)/home/(tabs)/predict/`
         | `/(app)/home/feed`
         | `/(app)/home/feed/`
+        | `/(app)/home/leaderboard`
+        | `/(app)/home/leaderboard/`
+        | `/(app)/home/predict`
+        | `/(app)/home/predict/`
         | `/(app)/home/settings`
         | `/(app)/home/settings/`
         | `/(app)/home/settings/blocked-users`
@@ -30,8 +38,16 @@ declare module 'one' {
         | `/home/(tabs)`
         | `/home/(tabs)/feed`
         | `/home/(tabs)/feed/`
+        | `/home/(tabs)/leaderboard`
+        | `/home/(tabs)/leaderboard/`
+        | `/home/(tabs)/predict`
+        | `/home/(tabs)/predict/`
         | `/home/feed`
         | `/home/feed/`
+        | `/home/leaderboard`
+        | `/home/leaderboard/`
+        | `/home/predict`
+        | `/home/predict/`
         | `/home/settings`
         | `/home/settings/`
         | `/home/settings/blocked-users`
