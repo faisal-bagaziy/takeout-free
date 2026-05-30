@@ -178,70 +178,70 @@ export const ProvideZero = ({ children }: { children: ReactNode }) => (
 )
 
 let lastConnectionState: 'disconnected' | 'connected' | 'idle' = 'idle'
+let hasEverConnected = false
+let disconnectedAt: number | null = null
 
 const announceDisconnected = debounce(() => {
   if (lastConnectionState !== 'disconnected') return
-  showToast(`Disconnected!`, {
-    type: 'error',
-  })
+  showToast(`Disconnected!`, { type: 'error' })
 }, 3000)
 
-let hasEverConnected = false
+// True singleton: subscribe once for the lifetime of the module.
+// Never unsubscribed — Zero itself is a module-level singleton that lives
+// as long as the app. Any React component mounting/unmounting due to
+// navigation must not add or remove this subscription.
+let connectionMonitorInitialized = false
 
-// Singleton guard: only one subscription to zero.connection.state may exist at a time.
-// ZeroConnectionMonitor can remount multiple times during navigation, but each remount
-// must not stack additional listeners on top of an existing live subscription.
-let connectionMonitorRefs = 0
-let connectionMonitorUnsub: (() => void) | null = null
-let zeroEventsUnsub: (() => void) | null = null
+function initConnectionMonitor() {
+  if (connectionMonitorInitialized) return
+  connectionMonitorInitialized = true
+
+  zero.connection.state.subscribe((connectionState) => {
+    if (connectionState.name === 'connected') {
+      announceDisconnected.cancel()
+
+      // Only show reconnect toast after a sustained disconnect (> 3 s).
+      // Brief blips from auth token refresh or navigation don't count.
+      const disconnectedDuration = disconnectedAt != null ? Date.now() - disconnectedAt : 0
+      if (hasEverConnected && lastConnectionState === 'disconnected' && disconnectedDuration > 3000) {
+        showToast(`Re-connected!`)
+      }
+
+      hasEverConnected = true
+      lastConnectionState = 'connected'
+      disconnectedAt = null
+
+      if (typeof document !== 'undefined') {
+        document.body.dataset.zeroConnected = 'true'
+      }
+      return
+    }
+
+    if (
+      connectionState.name === 'disconnected' ||
+      connectionState.name === 'error' ||
+      connectionState.name === 'closed'
+    ) {
+      if (lastConnectionState !== 'disconnected') {
+        disconnectedAt = Date.now()
+      }
+      lastConnectionState = 'disconnected'
+      if (hasEverConnected) {
+        announceDisconnected()
+      }
+      return
+    }
+  })
+
+  zeroEvents.listen((event) => {
+    console.warn('zero event', event)
+  })
+}
 
 const ZeroConnectionMonitor = () => {
   useEffect(() => {
-    connectionMonitorRefs++
-
-    if (connectionMonitorRefs === 1) {
-      connectionMonitorUnsub = zero.connection.state.subscribe((connectionState) => {
-        if (connectionState.name === 'connected') {
-          announceDisconnected.cancel()
-          if (hasEverConnected && lastConnectionState === 'disconnected') {
-            showToast(`Re-connected!`)
-          }
-          hasEverConnected = true
-          lastConnectionState = 'connected'
-          // signal readiness for e2e tests waiting on zero sync
-          if (typeof document !== 'undefined') {
-            document.body.dataset.zeroConnected = 'true'
-          }
-          return
-        }
-
-        if (
-          connectionState.name === 'disconnected' ||
-          connectionState.name === 'error' ||
-          connectionState.name === 'closed'
-        ) {
-          lastConnectionState = 'disconnected'
-          if (hasEverConnected) {
-            announceDisconnected()
-          }
-          return
-        }
-      })
-
-      zeroEventsUnsub = zeroEvents.listen((event) => {
-        console.warn('zero event', event)
-      })
-    }
-
-    return () => {
-      connectionMonitorRefs--
-      if (connectionMonitorRefs === 0) {
-        connectionMonitorUnsub?.()
-        connectionMonitorUnsub = null
-        zeroEventsUnsub?.()
-        zeroEventsUnsub = null
-      }
-    }
+    initConnectionMonitor()
+    // No cleanup — singleton subscription lives for the app lifetime.
   }, [])
 
   return null
