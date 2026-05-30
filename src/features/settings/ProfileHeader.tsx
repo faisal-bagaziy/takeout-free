@@ -38,7 +38,7 @@ export function ProfileHeader() {
           bg="$blue8"
           items="center"
           justify="center"
-          flexShrink={0}
+          style={{ flexShrink: 0 }}
         >
           <SizableText fontSize={22} fontWeight="800" color="white">
             {initials || '?'}

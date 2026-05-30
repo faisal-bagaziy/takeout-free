@@ -10,7 +10,7 @@ import { FeedItem } from './FeedItem'
 
 type FeedRow =
   | { type: 'header'; label: string; key: string }
-  | { type: 'item'; data: NonNullable<ReturnType<typeof useFeedItems>>[number]; key: string }
+  | { type: 'item'; data: ReturnType<typeof useFeedItems>['feedItems'][number]; key: string }
 
 function dayLabel(ts: number): string {
   const d = new Date(ts)
@@ -152,7 +152,7 @@ export function FeedScreen() {
                 <SizableText size="$5" fontWeight="800" color="$color12" style={{ textAlign: 'center' }}>
                   {hasFollows ? 'No activity yet' : 'Your feed is empty'}
                 </SizableText>
-                <SizableText size="$3" color="$color9" style={{ textAlign: 'center' }} maxWidth={280}>
+                <SizableText size="$3" color="$color9" style={{ textAlign: 'center', maxWidth: 280 }}>
                   {hasFollows
                     ? 'People you follow haven\'t predicted yet. Check back when matches kick off.'
                     : 'Follow players on the Leaderboard to see their predictions here.'}

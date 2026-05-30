@@ -96,7 +96,7 @@ export function FeedItem({
             bg="$color7"
             items="center"
             justify="center"
-            flexShrink={0}
+            style={{ flexShrink: 0 }}
           >
             <SizableText size="$1" fontWeight="700" color="white">
               {initials || '?'}
