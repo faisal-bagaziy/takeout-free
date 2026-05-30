@@ -52,11 +52,11 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
 
   return (
     <YStack
-      backgroundColor="$color2"
-      borderRadius="$4"
+      bg="$color2"
+      rounded="$4"
       borderWidth={1}
       borderColor="$borderColor"
-      padding="$3"
+      p="$3"
       gap="$2"
     >
       <SizableText size="$1" color="$color9" textTransform="uppercase" letterSpacing={1}>
@@ -66,7 +66,7 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
       <XStack items="center" gap="$3">
         {/* Home team */}
         <XStack flex={1} justify="flex-end" items="center" gap="$2">
-          <SizableText size="$3" fontWeight="600" color="$color12" textAlign="right">
+          <SizableText size="$3" fontWeight="600" color="$color12" style={{ textAlign: 'right' }}>
             {match.homeTeam}
           </SizableText>
           <SizableText size="$5">{match.homeFlag}</SizableText>
@@ -79,8 +79,8 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
               <XStack
                 width={36}
                 height={36}
-                backgroundColor="$color3"
-                borderRadius="$2"
+                bg="$color3"
+                rounded="$2"
                 items="center"
                 justify="center"
               >
@@ -92,8 +92,8 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
               <XStack
                 width={36}
                 height={36}
-                backgroundColor="$color3"
-                borderRadius="$2"
+                bg="$color3"
+                rounded="$2"
                 items="center"
                 justify="center"
               >
@@ -120,7 +120,7 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
         </XStack>
       </XStack>
 
-      <SizableText size="$1" color="$color8" textAlign="center">
+      <SizableText size="$1" color="$color8" style={{ textAlign: 'center' }}>
         {kickoffLabel} · {match.venue.split(',')[0]}
       </SizableText>
 
@@ -129,12 +129,12 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
         <XStack justify="center" gap="$3" items="center">
           <Animated.View style={animatedStyle}>
             <XStack
-              backgroundColor={existingPrediction.pointsAwarded === 3 ? '$green3' : existingPrediction.pointsAwarded === 1 ? '$blue3' : '$color3'}
+              bg={existingPrediction.pointsAwarded === 3 ? '$green3' : existingPrediction.pointsAwarded === 1 ? '$blue3' : '$color3'}
               borderColor={existingPrediction.pointsAwarded === 3 ? '$green7' : existingPrediction.pointsAwarded === 1 ? '$blue7' : '$color6'}
               borderWidth={1}
-              borderRadius="$10"
-              paddingHorizontal="$3"
-              paddingVertical="$1"
+              rounded="$10"
+              px="$3"
+              py="$1"
             >
               <SizableText
                 size="$2"
@@ -157,7 +157,7 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
         </XStack>
       ) : isLocked ? (
         match.avgHomeScore != null ? (
-          <SizableText size="$1" color="$color8" textAlign="center">
+          <SizableText size="$1" color="$color8" style={{ textAlign: 'center' }}>
             Community avg: {match.avgHomeScore}–{match.avgAwayScore}
           </SizableText>
         ) : null
@@ -165,7 +165,7 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
         <Button
           size="$2"
           theme="blue"
-          borderRadius="$10"
+          rounded="$10"
           onPress={() => onConfirm(match.id, homeScore, awayScore, existingPrediction?.id)}
         >
           {existingPrediction ? 'Update Prediction' : 'Submit Prediction'}

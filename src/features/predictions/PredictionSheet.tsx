@@ -31,10 +31,10 @@ export function PredictionSheet({
       snapPoints={[35]}
       dismissOnSnapToBottom
     >
-      <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
+      <Sheet.Overlay enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
       <Sheet.Handle />
-      <Sheet.Frame padding="$5" gap="$4" backgroundColor="$color1">
-        <SizableText size="$6" fontWeight="700" textAlign="center">
+      <Sheet.Frame p="$5" gap="$4" bg="$color1">
+        <SizableText size="$6" fontWeight="700" style={{ textAlign: 'center' }}>
           Confirm Prediction
         </SizableText>
 

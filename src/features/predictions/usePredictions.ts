@@ -10,8 +10,16 @@ import { useAuth } from '~/features/auth/client/authClient'
 import { useQuery, zero } from '~/zero/client'
 
 export function useMatches(matchday?: number | null) {
-  const query = matchday != null ? matchesByMatchday({ matchday }) : allMatches()
-  const [matches, { type }] = useQuery(query, {})
+  const [matchesByDay, { type: type1 }] = useQuery(
+    matchesByMatchday,
+    { matchday: matchday ?? null },
+    { enabled: matchday != null },
+  )
+  const [allMatchesList, { type: type2 }] = useQuery(allMatches, {
+    enabled: matchday == null,
+  })
+  const matches = matchday != null ? matchesByDay : allMatchesList
+  const type = matchday != null ? type1 : type2
   return { matches: matches ?? [], isLoading: type === 'unknown' }
 }
 

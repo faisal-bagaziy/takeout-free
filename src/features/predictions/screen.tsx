@@ -67,7 +67,7 @@ export function PredictionsScreen() {
   )
 
   return (
-    <YStack flex={1} backgroundColor="$background">
+    <YStack flex={1} bg="$background">
       <PageContainer>
         <H1 py="$3" size="$6">Predict</H1>
 
