@@ -14,12 +14,12 @@ declare module 'one' {
         | `/(app)/auth/login/password`
         | `/(app)/home`
         | `/(app)/home/(tabs)`
-        | `/(app)/home/(tabs)/admin`
         | `/(app)/home/(tabs)/feed`
         | `/(app)/home/(tabs)/feed/`
         | `/(app)/home/(tabs)/leaderboard`
         | `/(app)/home/(tabs)/predict`
         | `/(app)/home/admin`
+        | `/(app)/home/admin/`
         | `/(app)/home/feed`
         | `/(app)/home/feed/`
         | `/(app)/home/leaderboard`
@@ -34,12 +34,12 @@ declare module 'one' {
         | `/auth/login/password`
         | `/home`
         | `/home/(tabs)`
-        | `/home/(tabs)/admin`
         | `/home/(tabs)/feed`
         | `/home/(tabs)/feed/`
         | `/home/(tabs)/leaderboard`
         | `/home/(tabs)/predict`
         | `/home/admin`
+        | `/home/admin/`
         | `/home/feed`
         | `/home/feed/`
         | `/home/leaderboard`

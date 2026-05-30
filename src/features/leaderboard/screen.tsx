@@ -1,66 +1,33 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { FlatList } from 'react-native'
-import { Button, SizableText, Spinner, XStack, YStack } from 'tamagui'
+import { isWeb, SizableText, Spinner, YStack } from 'tamagui'
 
 import { useAuth } from '~/features/auth/client/authClient'
-import { PageContainer } from '~/interface/layout/PageContainer'
 import { H1 } from '~/interface/text/Headings'
 import { LeaderboardRow } from './LeaderboardRow'
-import { useFriendsLeaderboard, useLeaderboard, useMyLeaderboardEntry } from './useLeaderboard'
-
-type Tab = 'all' | 'friends'
+import { useLeaderboard, useMyLeaderboardEntry } from './useLeaderboard'
 
 export function LeaderboardScreen() {
   const auth = useAuth()
   const myUserId = auth?.user?.id
-  const [tab, setTab] = useState<Tab>('all')
-
-  const { entries: allEntries, isLoading: allLoading } = useLeaderboard()
-  const { entries: friendEntries, isLoading: friendsLoading } = useFriendsLeaderboard()
+  const { entries, isLoading } = useLeaderboard()
   const { myEntry } = useMyLeaderboardEntry()
-
-  const entries = tab === 'all' ? allEntries : friendEntries
-  const isLoading = tab === 'all' ? allLoading : friendsLoading
 
   const myRank = useMemo(() => {
     if (!myUserId) return null
-    const idx = allEntries.findIndex((e) => e.userId === myUserId)
+    const idx = entries.findIndex((e) => e.userId === myUserId)
     return idx >= 0 ? idx + 1 : null
-  }, [allEntries, myUserId])
-
-  const myFriendsRank = useMemo(() => {
-    if (!myUserId) return null
-    const idx = friendEntries.findIndex((e) => e.userId === myUserId)
-    return idx >= 0 ? idx + 1 : null
-  }, [friendEntries, myUserId])
-
-  const currentRank = tab === 'all' ? myRank : myFriendsRank
+  }, [entries, myUserId])
 
   return (
-    <YStack flex={1} bg="$background">
-      <PageContainer>
+    <YStack
+      bg="$background"
+      pt={isWeb ? 70 : 0}
+      style={isWeb ? { height: '100vh', display: 'flex', flexDirection: 'column' } : { flex: 1 }}
+    >
+      <YStack px="$4" maxW={860} width="100%" mx="auto">
         <H1 py="$3" size="$6">Leaderboard</H1>
-
-        {/* Tab bar */}
-        <XStack gap="$2" mb="$4">
-          <Button
-            size="$3"
-            theme={tab === 'all' ? 'blue' : undefined}
-            chromeless={tab !== 'all'}
-            onPress={() => setTab('all')}
-          >
-            Global
-          </Button>
-          <Button
-            size="$3"
-            theme={tab === 'friends' ? 'blue' : undefined}
-            chromeless={tab !== 'friends'}
-            onPress={() => setTab('friends')}
-          >
-            Friends
-          </Button>
-        </XStack>
-      </PageContainer>
+      </YStack>
 
       {isLoading ? (
         <YStack flex={1} items="center" justify="center">
@@ -70,7 +37,15 @@ export function LeaderboardScreen() {
         <FlatList
           data={entries}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100, gap: 4 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: 100,
+            gap: 4,
+            maxWidth: 860,
+            alignSelf: 'center',
+            width: '100%',
+          }}
           renderItem={({ item, index }) => (
             <LeaderboardRow
               entry={item}
@@ -80,22 +55,16 @@ export function LeaderboardScreen() {
           )}
           ListEmptyComponent={
             <YStack items="center" justify="center" py="$8">
-              <SizableText color="$color9">
-                {tab === 'friends' ? 'Follow people to see their scores here' : 'No predictions yet'}
-              </SizableText>
+              <SizableText color="$color9">No predictions yet</SizableText>
             </YStack>
           }
           ListFooterComponent={
             myEntry && myUserId && !entries.some((e) => e.userId === myUserId) ? (
-              <YStack pt="$2">
+              <YStack pt="$4" borderTopWidth={1} borderColor="$borderColor" mt="$2">
                 <SizableText size="$1" color="$color9" style={{ textAlign: 'center' }} pb="$2">
-                  Your rank
+                  Your position
                 </SizableText>
-                <LeaderboardRow
-                  entry={myEntry}
-                  rank={currentRank ?? 0}
-                  isMe
-                />
+                <LeaderboardRow entry={myEntry} rank={myRank ?? 0} isMe />
               </YStack>
             ) : null
           }
