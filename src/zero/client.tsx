@@ -188,43 +188,59 @@ const announceDisconnected = debounce(() => {
 
 let hasEverConnected = false
 
+// Singleton guard: only one subscription to zero.connection.state may exist at a time.
+// ZeroConnectionMonitor can remount multiple times during navigation, but each remount
+// must not stack additional listeners on top of an existing live subscription.
+let connectionMonitorRefs = 0
+let connectionMonitorUnsub: (() => void) | null = null
+let zeroEventsUnsub: (() => void) | null = null
+
 const ZeroConnectionMonitor = () => {
   useEffect(() => {
-    const unsub1 = zero.connection.state.subscribe((connectionState) => {
-      if (connectionState.name === 'connected') {
-        announceDisconnected.cancel()
-        if (hasEverConnected && lastConnectionState === 'disconnected') {
-          showToast(`Re-connected!`)
-        }
-        hasEverConnected = true
-        lastConnectionState = 'connected'
-        // signal readiness for e2e tests waiting on zero sync
-        if (typeof document !== 'undefined') {
-          document.body.dataset.zeroConnected = 'true'
-        }
-        return
-      }
+    connectionMonitorRefs++
 
-      if (
-        connectionState.name === 'disconnected' ||
-        connectionState.name === 'error' ||
-        connectionState.name === 'closed'
-      ) {
-        lastConnectionState = 'disconnected'
-        if (hasEverConnected) {
-          announceDisconnected()
+    if (connectionMonitorRefs === 1) {
+      connectionMonitorUnsub = zero.connection.state.subscribe((connectionState) => {
+        if (connectionState.name === 'connected') {
+          announceDisconnected.cancel()
+          if (hasEverConnected && lastConnectionState === 'disconnected') {
+            showToast(`Re-connected!`)
+          }
+          hasEverConnected = true
+          lastConnectionState = 'connected'
+          // signal readiness for e2e tests waiting on zero sync
+          if (typeof document !== 'undefined') {
+            document.body.dataset.zeroConnected = 'true'
+          }
+          return
         }
-        return
-      }
-    })
 
-    const unsub2 = zeroEvents.listen((event) => {
-      console.warn('zero event', event)
-    })
+        if (
+          connectionState.name === 'disconnected' ||
+          connectionState.name === 'error' ||
+          connectionState.name === 'closed'
+        ) {
+          lastConnectionState = 'disconnected'
+          if (hasEverConnected) {
+            announceDisconnected()
+          }
+          return
+        }
+      })
+
+      zeroEventsUnsub = zeroEvents.listen((event) => {
+        console.warn('zero event', event)
+      })
+    }
 
     return () => {
-      unsub1()
-      unsub2()
+      connectionMonitorRefs--
+      if (connectionMonitorRefs === 0) {
+        connectionMonitorUnsub?.()
+        connectionMonitorUnsub = null
+        zeroEventsUnsub?.()
+        zeroEventsUnsub = null
+      }
     }
   }, [])
 
