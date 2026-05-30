@@ -23,8 +23,10 @@ export const leaderboardByUserId = (props: { userId: string }) => {
     )
 }
 
-export const followingByUser = (props: { followerId: string }) => {
+export const followsByUser = (props: { followerId: string }) => {
   return zql.follow
     .where(followPermission)
     .where('followerId', props.followerId)
 }
+
+export const followingByUser = followsByUser
