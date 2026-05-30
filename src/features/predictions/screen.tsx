@@ -1,19 +1,13 @@
-import { useMemo, useState } from 'react'
 import { FlatList } from 'react-native'
-import { Button, SizableText, Spinner, XStack, YStack } from 'tamagui'
+import { isWeb, SizableText, Spinner, YStack } from 'tamagui'
 
-import { useAuth } from '~/features/auth/client/authClient'
-import { PageContainer } from '~/interface/layout/PageContainer'
 import { H1 } from '~/interface/text/Headings'
 import { MatchCard } from './MatchCard'
 import { PredictionSheet } from './PredictionSheet'
 import { useMatches, useSubmitPrediction, useUserPredictions } from './usePredictions'
-
-const MATCHDAYS = [1, 2, 3]
+import { useState } from 'react'
 
 export function PredictionsScreen() {
-  const auth = useAuth()
-  const [selectedMatchday, setSelectedMatchday] = useState<number>(1)
   const [sheetState, setSheetState] = useState<{
     open: boolean
     matchId: string
@@ -26,7 +20,7 @@ export function PredictionsScreen() {
     existingId?: string
   } | null>(null)
 
-  const { matches, isLoading } = useMatches(selectedMatchday)
+  const { matches, isLoading } = useMatches()
   const { predictionsMap } = useUserPredictions()
   const { submitPrediction, updatePrediction } = useSubmitPrediction()
 
@@ -59,41 +53,14 @@ export function PredictionsScreen() {
     } else {
       submitPrediction(matchId, homeScore, awayScore)
     }
+    setSheetState(null)
   }
 
-  const sortedMatches = useMemo(
-    () => [...matches].sort((a, b) => a.kickoffAt - b.kickoffAt),
-    [matches],
-  )
-
   return (
-    <YStack flex={1} bg="$background">
-      <PageContainer>
+    <YStack bg="$background" pt={isWeb ? 70 : 0} style={isWeb ? { height: '100vh', display: 'flex', flexDirection: 'column' } : { flex: 1 }}>
+      <YStack px="$4" maxW={860} width="100%" mx="auto">
         <H1 py="$3" size="$6">Predict</H1>
-
-        {/* Matchday tabs */}
-        <XStack gap="$2" mb="$4" flexWrap="wrap">
-          {MATCHDAYS.map((day) => (
-            <Button
-              key={day}
-              size="$3"
-              theme={selectedMatchday === day ? 'blue' : undefined}
-              chromeless={selectedMatchday !== day}
-              onPress={() => setSelectedMatchday(day)}
-            >
-              Matchday {day}
-            </Button>
-          ))}
-          <Button
-            size="$3"
-            theme={selectedMatchday === 0 ? 'blue' : undefined}
-            chromeless={selectedMatchday !== 0}
-            onPress={() => setSelectedMatchday(0)}
-          >
-            Knockouts
-          </Button>
-        </XStack>
-      </PageContainer>
+      </YStack>
 
       {isLoading ? (
         <YStack flex={1} items="center" justify="center">
@@ -101,8 +68,9 @@ export function PredictionsScreen() {
         </YStack>
       ) : (
         <FlatList
-          data={sortedMatches}
+          data={matches}
           keyExtractor={(item) => item.id}
+          style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32, gap: 12 }}
           renderItem={({ item }) => (
             <MatchCard
@@ -114,7 +82,7 @@ export function PredictionsScreen() {
           )}
           ListEmptyComponent={
             <YStack items="center" justify="center" py="$8">
-              <SizableText color="$color9">No matches for this matchday</SizableText>
+              <SizableText color="$color9">No matches available</SizableText>
             </YStack>
           }
         />

@@ -2,25 +2,16 @@ import { useCallback } from 'react'
 
 import {
   allMatches,
-  matchesByMatchday,
   predictionByUserAndMatch,
   predictionsByUser,
 } from '~/data/queries/predictions'
 import { useAuth } from '~/features/auth/client/authClient'
 import { useQuery, zero } from '~/zero/client'
 
-export function useMatches(matchday?: number | null) {
-  const [matchesByDay, { type: type1 }] = useQuery(
-    matchesByMatchday,
-    { matchday: matchday ?? null },
-    { enabled: matchday != null },
-  )
-  const [allMatchesList, { type: type2 }] = useQuery(allMatches, {
-    enabled: matchday == null,
-  })
-  const matches = matchday != null ? matchesByDay : allMatchesList
-  const type = matchday != null ? type1 : type2
-  return { matches: matches ?? [], isLoading: type === 'unknown' }
+export function useMatches() {
+  const [matches, { type }] = useQuery(allMatches, {})
+  const rows = matches ?? []
+  return { matches: rows, isLoading: type === 'unknown' && rows.length === 0 }
 }
 
 export function useUserPredictions() {
@@ -56,7 +47,6 @@ export function useSubmitPrediction() {
         matchId,
         homeScore,
         awayScore,
-        pointsAwarded: null,
         createdAt: Date.now(),
       })
     },

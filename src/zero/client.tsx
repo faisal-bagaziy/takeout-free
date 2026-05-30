@@ -96,17 +96,14 @@ const ProvideZeroImpl = ({ children }: { children: ReactNode }) => {
       authData={stableAuthData}
       cacheURL={ZERO_SERVER_URL}
       {...(unstable_batchedUpdates ? { batchViewUpdates: unstable_batchedUpdates } : {})}
-      onClientStateNotFound={useCallback((reason?: string) => {
-        const description =
-          reason ||
-          'The local data needed to keep this page in sync is no longer available.'
-        console.error('[zero] client state not found', { reason: description })
-        setZeroDisabledByError(true)
-        showClientDataErrorOnce({
-          key: 'zero-client-state-not-found',
-          title: 'Sync Error',
-          description,
-        })
+      onClientStateNotFound={useCallback(async (reason?: string) => {
+        console.warn('[zero] client state not found, clearing local db and reloading', reason)
+        try {
+          await dropAllDatabases()
+        } catch (e) {
+          console.error('[zero] failed to drop databases', e)
+        }
+        window.location.reload()
       }, [])}
       onUpdateNeeded={useCallback((reason?: { type?: string; message?: string }) => {
         const description = [

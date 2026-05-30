@@ -15,7 +15,7 @@ export const matchesByMatchday = (props: { matchday: number | null }) => {
 }
 
 export const allMatches = () => {
-  return zql.match.where(matchReadPermission).orderBy('kickoffAt', 'asc')
+  return zql.match.orderBy('kickoffAt', 'asc')
 }
 
 export const predictionsByUser = (props: { userId: string }) => {

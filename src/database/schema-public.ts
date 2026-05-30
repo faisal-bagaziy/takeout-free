@@ -1,4 +1,12 @@
-import { bigint, boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core'
 
 export const userPublic = pgTable(
   'userPublic',
@@ -64,6 +72,8 @@ export const prediction = pgTable(
     homeScore: integer('homeScore').notNull(),
     awayScore: integer('awayScore').notNull(),
     pointsAwarded: integer('pointsAwarded'),
+    finalHomeScore: integer('finalHomeScore'),
+    finalAwayScore: integer('finalAwayScore'),
     createdAt: bigint('createdAt', { mode: 'number' }).notNull(),
   },
   (table) => [

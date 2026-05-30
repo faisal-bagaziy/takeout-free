@@ -30,7 +30,9 @@ export const authServer = betterAuth({
     // match dev, prod, tauri
     `https://${DOMAIN}`,
     'http://localhost:8081',
+    'http://localhost:8082',
     'http://host.docker.internal:8081',
+    'http://host.docker.internal:8082',
     `${APP_SCHEME}://`,
   ],
 
