@@ -11,6 +11,7 @@ export function TabsLayout() {
       <Tabs.Screen name="predict" />
       <Tabs.Screen name="leaderboard" />
       <Tabs.Screen name="feed" />
+      <Tabs.Screen name="admin" options={{ href: null }} />
     </Tabs>
   )
 }

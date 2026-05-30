@@ -16,8 +16,11 @@ import { ThemeSwitch } from '~/interface/theme/ThemeSwitch'
 
 import { NavigationTabs } from './NavigationTabs'
 
+const ADMIN_EMAILS = ['faisalbagaziy@gmail.com']
+
 export const MainHeader = () => {
   const { user } = useAuth()
+  const isAdmin = !!(user && (user.role === 'admin' || ADMIN_EMAILS.includes(user.email || '')))
   return (
     <ScrollHeader>
       <PageContainer>
@@ -56,6 +59,15 @@ export const MainHeader = () => {
               )}
 
               <ThemeSwitch />
+              {isAdmin && (
+                <Button
+                  circular
+                  onPress={() => router.push('/home/admin')}
+                  icon={<GearIcon size={18} />}
+                  aria-label="Admin"
+                  theme="blue"
+                />
+              )}
               <Button
                 circular
                 onPress={() => router.push('/home/settings')}
@@ -76,6 +88,7 @@ export const MainHeaderMenu = memo(() => {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const { logout } = useLogout()
+  const isAdmin = !!(user && (user.role === 'admin' || ADMIN_EMAILS.includes(user.email || '')))
 
   const handleLogout = () => {
     void logout()
@@ -133,6 +146,25 @@ export const MainHeaderMenu = memo(() => {
                 <GearIcon />
                 <H3 size="$3">Settings</H3>
               </XStack>
+
+              {isAdmin && (
+                <XStack
+                  p="$3"
+                  rounded="$4"
+                  gap="$3"
+                  items="center"
+                  hoverStyle={{ bg: '$color3' }}
+                  pressStyle={{ bg: '$color4' }}
+                  cursor="pointer"
+                  onPress={() => {
+                    setOpen(false)
+                    router.push('/home/admin')
+                  }}
+                >
+                  <GearIcon />
+                  <H3 size="$3">Admin</H3>
+                </XStack>
+              )}
 
               <XStack
                 p="$3"

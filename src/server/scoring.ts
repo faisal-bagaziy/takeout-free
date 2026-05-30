@@ -15,8 +15,10 @@ export function calcPoints(
   predicted: { home: number; away: number },
   actual: { home: number; away: number },
 ): number {
-  if (predicted.home === actual.home && predicted.away === actual.away) return 3
-  if (getResult(predicted.home, predicted.away) === getResult(actual.home, actual.away)) return 1
+  const homeCorrect = predicted.home === actual.home
+  const awayCorrect = predicted.away === actual.away
+  if (homeCorrect && awayCorrect) return 3
+  if (homeCorrect || awayCorrect) return 1
   return 0
 }
 

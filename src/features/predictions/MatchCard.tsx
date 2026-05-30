@@ -10,19 +10,39 @@ import { Button, SizableText, XStack, YStack } from 'tamagui'
 import type { Match } from '~/data/models/match'
 import { ScoreInput } from './ScoreInput'
 
+interface ExistingPrediction {
+  id: string
+  homeScore: number
+  awayScore: number
+  pointsAwarded?: number | null
+  finalHomeScore?: number | null
+  finalAwayScore?: number | null
+}
+
 interface MatchCardProps {
   match: Match
-  existingPrediction: { id: string; homeScore: number; awayScore: number; pointsAwarded: number | null | undefined } | null
+  existingPrediction: ExistingPrediction | null
   onSubmit: (matchId: string, homeScore: number, awayScore: number) => void
   onConfirm: (matchId: string, homeScore: number, awayScore: number, existingId?: string) => void
 }
 
 export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: MatchCardProps) {
-  const isLocked = match.kickoffAt <= Date.now() || match.status !== 'scheduled'
+  const isLocked = match.kickoffAt - 3_600_000 <= Date.now() || match.status !== 'scheduled'
   const isFinished = match.status === 'finished'
+  const hasActualScore = match.homeScore != null && match.awayScore != null
 
   const [homeScore, setHomeScore] = useState(existingPrediction?.homeScore ?? 0)
   const [awayScore, setAwayScore] = useState(existingPrediction?.awayScore ?? 0)
+
+  // Sync inputs when prediction loads from Zero after mount (e.g. navigating back)
+  const syncedPredictionId = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (existingPrediction && existingPrediction.id !== syncedPredictionId.current) {
+      setHomeScore(existingPrediction.homeScore)
+      setAwayScore(existingPrediction.awayScore)
+      syncedPredictionId.current = existingPrediction.id
+    }
+  }, [existingPrediction])
 
   const pointsScale = useSharedValue(1)
   const animatedStyle = useAnimatedStyle(() => ({
@@ -59,10 +79,30 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
       p="$3"
       gap="$2"
     >
-      <SizableText size="$1" color="$color9" textTransform="uppercase" letterSpacing={1}>
-        {stageLabel}
-      </SizableText>
+      {/* Stage + confirmed badge row */}
+      <XStack items="center" justify="space-between">
+        <SizableText size="$1" color="$color9" textTransform="uppercase" letterSpacing={1}>
+          {stageLabel}
+        </SizableText>
+        {existingPrediction && !isLocked && (
+          <XStack
+            bg="$green3"
+            borderColor="$green7"
+            borderWidth={1}
+            rounded="$10"
+            px="$2"
+            py="$0.5"
+            items="center"
+            gap="$1"
+          >
+            <SizableText size="$1" color="$green10" fontWeight="600">
+              ✓ Confirmed
+            </SizableText>
+          </XStack>
+        )}
+      </XStack>
 
+      {/* Teams + scores */}
       <XStack items="center" gap="$3">
         {/* Home team */}
         <XStack flex={1} justify="flex-end" items="center" gap="$2">
@@ -72,35 +112,49 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
           <SizableText size="$5">{match.homeFlag}</SizableText>
         </XStack>
 
-        {/* Score inputs */}
+        {/* Score inputs or static prediction */}
         <XStack items="center" gap="$2">
           {isLocked ? (
             <>
-              <XStack
-                width={36}
-                height={36}
-                bg="$color3"
-                rounded="$2"
-                items="center"
-                justify="center"
-              >
-                <SizableText size="$5" fontWeight="700" color="$color9">
-                  {existingPrediction?.homeScore ?? '–'}
-                </SizableText>
-              </XStack>
-              <SizableText color="$color8" size="$4">–</SizableText>
-              <XStack
-                width={36}
-                height={36}
-                bg="$color3"
-                rounded="$2"
-                items="center"
-                justify="center"
-              >
-                <SizableText size="$5" fontWeight="700" color="$color9">
-                  {existingPrediction?.awayScore ?? '–'}
-                </SizableText>
-              </XStack>
+              {(() => {
+                const homeCorrect = isFinished && hasActualScore && existingPrediction != null && existingPrediction.homeScore === match.homeScore
+                const homeWrong = isFinished && hasActualScore && existingPrediction != null && existingPrediction.homeScore !== match.homeScore
+                const awayCorrect = isFinished && hasActualScore && existingPrediction != null && existingPrediction.awayScore === match.awayScore
+                const awayWrong = isFinished && hasActualScore && existingPrediction != null && existingPrediction.awayScore !== match.awayScore
+                return (
+                  <>
+                    <XStack
+                      width={36}
+                      height={36}
+                      bg={homeCorrect ? '$green3' : homeWrong ? '$red3' : '$color3'}
+                      borderWidth={homeCorrect || homeWrong ? 1 : 0}
+                      borderColor={homeCorrect ? '$green7' : homeWrong ? '$red7' : 'transparent'}
+                      rounded="$2"
+                      items="center"
+                      justify="center"
+                    >
+                      <SizableText size="$5" fontWeight="700" color={homeCorrect ? '$green10' : homeWrong ? '$red10' : '$color9'}>
+                        {existingPrediction?.homeScore ?? '–'}
+                      </SizableText>
+                    </XStack>
+                    <SizableText color="$color8" size="$4">–</SizableText>
+                    <XStack
+                      width={36}
+                      height={36}
+                      bg={awayCorrect ? '$green3' : awayWrong ? '$red3' : '$color3'}
+                      borderWidth={awayCorrect || awayWrong ? 1 : 0}
+                      borderColor={awayCorrect ? '$green7' : awayWrong ? '$red7' : 'transparent'}
+                      rounded="$2"
+                      items="center"
+                      justify="center"
+                    >
+                      <SizableText size="$5" fontWeight="700" color={awayCorrect ? '$green10' : awayWrong ? '$red10' : '$color9'}>
+                        {existingPrediction?.awayScore ?? '–'}
+                      </SizableText>
+                    </XStack>
+                  </>
+                )
+              })()}
             </>
           ) : (
             <>
@@ -119,6 +173,26 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
           </SizableText>
         </XStack>
       </XStack>
+
+      {/* Final score row (shown when match is finished and actual score exists) */}
+      {isFinished && hasActualScore && (
+        <XStack
+          bg="$color3"
+          rounded="$3"
+          px="$3"
+          py="$1.5"
+          items="center"
+          justify="center"
+          gap="$2"
+        >
+          <SizableText size="$1" color="$color9" textTransform="uppercase" letterSpacing={1}>
+            Final
+          </SizableText>
+          <SizableText size="$4" fontWeight="800" color="$color12">
+            {match.homeScore} – {match.awayScore}
+          </SizableText>
+        </XStack>
+      )}
 
       <SizableText size="$1" color="$color8" style={{ textAlign: 'center' }}>
         {kickoffLabel} · {match.venue.split(',')[0]}
@@ -144,7 +218,7 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
                 {existingPrediction.pointsAwarded === 3
                   ? '✓ Exact score · +3 pts'
                   : existingPrediction.pointsAwarded === 1
-                  ? '✓ Correct result · +1 pt'
+                  ? '✓ One score correct · +1 pt'
                   : '✗ Wrong · +0 pts'}
               </SizableText>
             </XStack>
