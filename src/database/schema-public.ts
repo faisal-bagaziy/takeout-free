@@ -71,3 +71,27 @@ export const prediction = pgTable(
     index('prediction_matchId_idx').on(table.matchId),
   ],
 )
+
+export const leaderboardEntry = pgTable('leaderboardEntry', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull().unique(),
+  totalPoints: integer('totalPoints').notNull().default(0),
+  exactScores: integer('exactScores').notNull().default(0),
+  correctResults: integer('correctResults').notNull().default(0),
+  predictionsMade: integer('predictionsMade').notNull().default(0),
+  updatedAt: bigint('updatedAt', { mode: 'number' }).notNull(),
+})
+
+export const follow = pgTable(
+  'follow',
+  {
+    id: text('id').primaryKey(),
+    followerId: text('followerId').notNull(),
+    followingId: text('followingId').notNull(),
+    createdAt: bigint('createdAt', { mode: 'number' }).notNull(),
+  },
+  (table) => [
+    index('follow_followerId_idx').on(table.followerId),
+    index('follow_followingId_idx').on(table.followingId),
+  ],
+)
