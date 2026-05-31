@@ -1,7 +1,66 @@
+/* ── FWC2026 Brand Fonts ───────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800;900&family=Saira+Condensed:wght@500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700;800&display=swap');
+
+@font-face {
+  font-family: 'FWC2026';
+  src: url('/fonts/FWC2026-NormalRegular.ttf') format('truetype');
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'FWC2026 Cond';
+  src: url('/fonts/FWC2026-UltraCondensed.ttf') format('truetype');
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'FIFA 26';
+  src: url('/fonts/FIFA26.ttf') format('truetype');
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+/* ── FWC2026 Design Tokens ─────────────────────────────────────────────── */
 :root {
   color-scheme: light dark;
   --font-heading: system-ui, sans-serif;
   --font-body: system-ui, sans-serif;
+
+  /* Brand palette */
+  --fwc-ink:        #151519;
+  --fwc-ink-card:   #1d1d22;
+  --fwc-white:      #ffffff;
+  --fwc-paper:      #f7f7f8;
+  --fwc-lime:       #adeb03;
+  --fwc-lime-deep:  #8fc400;
+  --fwc-purple:     #6a1ce6;
+  --fwc-red:        #e5102e;
+  --fwc-gold:       #e8a30e;
+
+  /* Neutrals */
+  --fwc-grey-300:   #d8d9df;
+  --fwc-grey-400:   #b6b7c3;
+  --fwc-grey-500:   #707287;
+  --fwc-grey-600:   #5a5b6f;
+  --fwc-grey-700:   #494957;
+
+  /* Semantic */
+  --fwc-divider:    #707287;
+  --fwc-score-bg:   #f7f7f8;
+  --fwc-score-fg:   #151519;
+
+  /* Type families */
+  --fwc-font-display:   'FWC2026', 'Saira', 'Arial Narrow', sans-serif;
+  --fwc-font-condensed: 'FWC2026 Cond', 'FWC2026', 'Saira Condensed', sans-serif;
+  --fwc-font-body:      'Noto Sans', system-ui, sans-serif;
+  --fwc-font-logo:      'FIFA 26', var(--fwc-font-display);
+
+  /* Radii */
+  --fwc-r-sm:   16px;
+  --fwc-r-md:   28px;
+  --fwc-r-lg:   40px;
+  --fwc-r-xl:   52px;
+  --fwc-r-pill: 999px;
 }
 
 body {

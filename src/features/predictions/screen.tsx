@@ -1,7 +1,5 @@
 import { FlatList } from 'react-native'
-import { isWeb, SizableText, Spinner, YStack } from 'tamagui'
-
-import { H1 } from '~/interface/text/Headings'
+import { isWeb, SizableText, Spinner, XStack, YStack } from 'tamagui'
 import { MatchCard } from './MatchCard'
 import { PredictionSheet } from './PredictionSheet'
 import { useMatches, useSubmitPrediction, useUserPredictions } from './usePredictions'
@@ -58,8 +56,42 @@ export function PredictionsScreen() {
 
   return (
     <YStack bg="$background" pt={isWeb ? 70 : 0} style={isWeb ? { height: '100vh', display: 'flex', flexDirection: 'column' } : { flex: 1 }}>
-      <YStack px="$4" maxW={860} width="100%" mx="auto">
-        <H1 py="$3" size="$6">Predict</H1>
+      <YStack px="$4" pt="$3" pb="$2" maxW={860} width="100%" mx="auto" gap="$0.5">
+        <XStack items="center" gap="$2">
+          <SizableText
+            style={{
+              fontFamily: 'var(--fwc-font-display, system-ui)',
+              fontWeight: '900',
+              fontSize: 32,
+              textTransform: 'uppercase',
+              letterSpacing: -0.5,
+              color: 'var(--fwc-paper, #f7f7f8)',
+              lineHeight: 1,
+            }}
+          >
+            Predict
+          </SizableText>
+          <XStack
+            rounded={999 as any}
+            px="$2"
+            py="$0.5"
+            style={{ backgroundColor: '#adeb03' }}
+          >
+            <SizableText
+              style={{
+                fontFamily: 'var(--fwc-font-condensed, system-ui)',
+                fontWeight: '700',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                color: '#151519',
+              }}
+            >
+              WC2026
+            </SizableText>
+          </XStack>
+        </XStack>
+        <SizableText size="$2" color="$color9">Pick your scores before kickoff</SizableText>
       </YStack>
 
       {isLoading ? (

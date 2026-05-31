@@ -5,10 +5,22 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated'
-import { Button, SizableText, XStack, YStack } from 'tamagui'
+import { isWeb, SizableText, XStack, YStack } from 'tamagui'
 
 import type { Match } from '~/data/models/match'
+import { FlagChip } from '~/interface/flags/FlagChip'
 import { ScoreInput } from './ScoreInput'
+
+// FWC2026 brand colors (hardcoded — not in Tamagui theme)
+const C = {
+  ink: '#151519',
+  card: '#1d1d22',
+  lime: '#adeb03',
+  limeDark: '#8fc400',
+  paper: '#f7f7f8',
+  divider: 'rgba(112,114,135,0.5)',
+  muted: '#707287',
+}
 
 interface ExistingPrediction {
   id: string
@@ -26,6 +38,43 @@ interface MatchCardProps {
   onConfirm: (matchId: string, homeScore: number, awayScore: number, existingId?: string) => void
 }
 
+function ScoreBox({
+  value,
+  correct,
+  wrong,
+}: {
+  value: number | null | undefined
+  correct?: boolean
+  wrong?: boolean
+}) {
+  const bg = correct ? '#1a3a0f' : wrong ? '#3a0f10' : C.paper
+  const fg = correct ? '#6ee048' : wrong ? '#f87171' : C.ink
+  const border = correct ? '#4caf50' : wrong ? '#ef4444' : 'transparent'
+  return (
+    <XStack
+      width={48}
+      height={44}
+      rounded={10 as any}
+      borderWidth={correct || wrong ? 1.5 : 0}
+      items="center"
+      justify="center"
+      style={{ backgroundColor: bg, borderColor: border, flexShrink: 0 }}
+    >
+      <SizableText
+        style={{
+          fontFamily: 'var(--fwc-font-display, system-ui)',
+          fontWeight: '800',
+          fontSize: 22,
+          lineHeight: 1,
+          color: fg,
+        }}
+      >
+        {value != null ? String(value) : '–'}
+      </SizableText>
+    </XStack>
+  )
+}
+
 export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: MatchCardProps) {
   const isLocked = match.kickoffAt - 3_600_000 <= Date.now() || match.status !== 'scheduled'
   const isFinished = match.status === 'finished'
@@ -34,7 +83,6 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
   const [homeScore, setHomeScore] = useState(existingPrediction?.homeScore ?? 0)
   const [awayScore, setAwayScore] = useState(existingPrediction?.awayScore ?? 0)
 
-  // Sync inputs when prediction loads from Zero after mount (e.g. navigating back)
   const syncedPredictionId = useRef<string | undefined>(undefined)
   useEffect(() => {
     if (existingPrediction && existingPrediction.id !== syncedPredictionId.current) {
@@ -48,7 +96,6 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pointsScale.value }],
   }))
-
   const prevPoints = useRef<number | null | undefined>(undefined)
   useEffect(() => {
     const pts = existingPrediction?.pointsAwarded
@@ -60,8 +107,8 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
 
   const stageLabel =
     match.stage === 'group'
-      ? `Group ${match.group} · Matchday ${match.matchday}`
-      : match.stage.toUpperCase()
+      ? `GROUP ${match.group} · MD${match.matchday}`
+      : match.stage.replace(/-/g, ' ').toUpperCase()
 
   const kickoffLabel = new Date(match.kickoffAt).toLocaleString('en-US', {
     month: 'short',
@@ -70,181 +117,248 @@ export function MatchCard({ match, existingPrediction, onSubmit, onConfirm }: Ma
     minute: '2-digit',
   })
 
+  const homeCorrect = isFinished && hasActualScore && existingPrediction != null && existingPrediction.homeScore === match.homeScore
+  const homeWrong   = isFinished && hasActualScore && existingPrediction != null && existingPrediction.homeScore !== match.homeScore
+  const awayCorrect = isFinished && hasActualScore && existingPrediction != null && existingPrediction.awayScore === match.awayScore
+  const awayWrong   = isFinished && hasActualScore && existingPrediction != null && existingPrediction.awayScore !== match.awayScore
+
+  const pts = existingPrediction?.pointsAwarded
+  const hasPts = isFinished && pts != null
+
   return (
     <YStack
-      bg="$color2"
-      rounded="$4"
-      borderWidth={1}
-      borderColor="$borderColor"
-      p="$3"
-      gap="$2"
+      overflow="hidden"
+      rounded={16 as any}
+      style={{
+        backgroundColor: C.card,
+        borderLeftWidth: 3,
+        borderLeftColor: hasPts
+          ? pts === 3 ? C.lime : pts === 1 ? '#4f91c5' : C.muted
+          : existingPrediction && !isLocked
+          ? C.lime
+          : 'transparent',
+      }}
     >
-      {/* Stage + confirmed badge row */}
-      <XStack items="center" justify="space-between">
-        <SizableText size="$1" color="$color9" textTransform="uppercase" letterSpacing={1}>
+      {/* Stage + kickoff header */}
+      <XStack
+        px="$3"
+        pt="$2.5"
+        pb="$1.5"
+        items="center"
+        justify="space-between"
+        style={{ borderBottomWidth: 1, borderBottomColor: C.divider }}
+      >
+        <SizableText
+          style={{
+            fontFamily: 'var(--fwc-font-condensed, system-ui)',
+            fontWeight: '700',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: 1.2,
+            color: C.muted,
+          }}
+        >
           {stageLabel}
         </SizableText>
-        {existingPrediction && !isLocked && (
-          <XStack
-            bg="$green3"
-            borderColor="$green7"
-            borderWidth={1}
-            rounded="$10"
-            px="$2"
-            py="$0.5"
-            items="center"
-            gap="$1"
-          >
-            <SizableText size="$1" color="$green10" fontWeight="600">
-              ✓ Confirmed
-            </SizableText>
-          </XStack>
+        <SizableText
+          style={{
+            fontFamily: 'var(--fwc-font-condensed, system-ui)',
+            fontWeight: '600',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            color: C.muted,
+          }}
+        >
+          {kickoffLabel}
+        </SizableText>
+      </XStack>
+
+      {/* Home team row */}
+      <XStack px="$3" py="$2.5" items="center" gap="$2.5">
+        <FlagChip flag={match.homeFlag} size="sm" />
+        <SizableText
+          flex={1}
+          style={{
+            fontFamily: 'var(--fwc-font-display, system-ui)',
+            fontWeight: '800',
+            fontSize: 18,
+            textTransform: 'uppercase',
+            letterSpacing: 0.3,
+            color: C.paper,
+            lineHeight: 1,
+          }}
+          numberOfLines={1}
+        >
+          {match.homeTeam}
+        </SizableText>
+        {isLocked ? (
+          <ScoreBox value={existingPrediction?.homeScore} correct={homeCorrect} wrong={homeWrong} />
+        ) : (
+          <ScoreInput
+            value={homeScore}
+            onChange={setHomeScore}
+            style={{ backgroundColor: C.paper, borderColor: C.lime, borderWidth: 2, color: C.ink }}
+          />
         )}
       </XStack>
 
-      {/* Teams + scores */}
-      <XStack items="center" gap="$3">
-        {/* Home team */}
-        <XStack flex={1} justify="flex-end" items="center" gap="$2">
-          <SizableText size="$3" fontWeight="600" color="$color12" style={{ textAlign: 'right' }}>
-            {match.homeTeam}
-          </SizableText>
-          <SizableText size="$5">{match.homeFlag}</SizableText>
-        </XStack>
+      {/* Divider */}
+      <YStack style={{ height: 1, backgroundColor: C.divider, marginHorizontal: 12 }} />
 
-        {/* Score inputs or static prediction */}
-        <XStack items="center" gap="$2">
-          {isLocked ? (
-            <>
-              {(() => {
-                const homeCorrect = isFinished && hasActualScore && existingPrediction != null && existingPrediction.homeScore === match.homeScore
-                const homeWrong = isFinished && hasActualScore && existingPrediction != null && existingPrediction.homeScore !== match.homeScore
-                const awayCorrect = isFinished && hasActualScore && existingPrediction != null && existingPrediction.awayScore === match.awayScore
-                const awayWrong = isFinished && hasActualScore && existingPrediction != null && existingPrediction.awayScore !== match.awayScore
-                return (
-                  <>
-                    <XStack
-                      width={36}
-                      height={36}
-                      bg={homeCorrect ? '$green3' : homeWrong ? '$red3' : '$color3'}
-                      borderWidth={homeCorrect || homeWrong ? 1 : 0}
-                      borderColor={homeCorrect ? '$green7' : homeWrong ? '$red7' : 'transparent'}
-                      rounded="$2"
-                      items="center"
-                      justify="center"
-                    >
-                      <SizableText size="$5" fontWeight="700" color={homeCorrect ? '$green10' : homeWrong ? '$red10' : '$color9'}>
-                        {existingPrediction?.homeScore ?? '–'}
-                      </SizableText>
-                    </XStack>
-                    <SizableText color="$color8" size="$4">–</SizableText>
-                    <XStack
-                      width={36}
-                      height={36}
-                      bg={awayCorrect ? '$green3' : awayWrong ? '$red3' : '$color3'}
-                      borderWidth={awayCorrect || awayWrong ? 1 : 0}
-                      borderColor={awayCorrect ? '$green7' : awayWrong ? '$red7' : 'transparent'}
-                      rounded="$2"
-                      items="center"
-                      justify="center"
-                    >
-                      <SizableText size="$5" fontWeight="700" color={awayCorrect ? '$green10' : awayWrong ? '$red10' : '$color9'}>
-                        {existingPrediction?.awayScore ?? '–'}
-                      </SizableText>
-                    </XStack>
-                  </>
-                )
-              })()}
-            </>
-          ) : (
-            <>
-              <ScoreInput value={homeScore} onChange={setHomeScore} />
-              <SizableText color="$color8" size="$4">–</SizableText>
-              <ScoreInput value={awayScore} onChange={setAwayScore} />
-            </>
-          )}
-        </XStack>
-
-        {/* Away team */}
-        <XStack flex={1} justify="flex-start" items="center" gap="$2">
-          <SizableText size="$5">{match.awayFlag}</SizableText>
-          <SizableText size="$3" fontWeight="600" color="$color12">
-            {match.awayTeam}
-          </SizableText>
-        </XStack>
+      {/* Away team row */}
+      <XStack px="$3" py="$2.5" items="center" gap="$2.5">
+        <FlagChip flag={match.awayFlag} size="sm" />
+        <SizableText
+          flex={1}
+          style={{
+            fontFamily: 'var(--fwc-font-display, system-ui)',
+            fontWeight: '800',
+            fontSize: 18,
+            textTransform: 'uppercase',
+            letterSpacing: 0.3,
+            color: C.paper,
+            lineHeight: 1,
+          }}
+          numberOfLines={1}
+        >
+          {match.awayTeam}
+        </SizableText>
+        {isLocked ? (
+          <ScoreBox value={existingPrediction?.awayScore} correct={awayCorrect} wrong={awayWrong} />
+        ) : (
+          <ScoreInput
+            value={awayScore}
+            onChange={setAwayScore}
+            style={{ backgroundColor: C.paper, borderColor: C.lime, borderWidth: 2, color: C.ink }}
+          />
+        )}
       </XStack>
 
-      {/* Final score row (shown when match is finished and actual score exists) */}
-      {isFinished && hasActualScore && (
-        <XStack
-          bg="$color3"
-          rounded="$3"
-          px="$3"
-          py="$1.5"
-          items="center"
-          justify="center"
-          gap="$2"
-        >
-          <SizableText size="$1" color="$color9" textTransform="uppercase" letterSpacing={1}>
-            Final
+      {/* Footer: final score / points badge / submit button */}
+      <XStack
+        px="$3"
+        pb="$3"
+        pt="$1"
+        items="center"
+        justify="space-between"
+        gap="$2"
+      >
+        {/* Final result */}
+        {isFinished && hasActualScore ? (
+          <XStack items="center" gap="$1.5" rounded={999 as any} px="$2" py="$0.5"
+            style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+            <SizableText
+              style={{
+                fontFamily: 'var(--fwc-font-condensed, system-ui)',
+                fontWeight: '700',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                color: C.muted,
+              }}
+            >
+              FINAL
+            </SizableText>
+            <SizableText
+              style={{
+                fontFamily: 'var(--fwc-font-display, system-ui)',
+                fontWeight: '800',
+                fontSize: 15,
+                color: C.paper,
+              }}
+            >
+              {match.homeScore} – {match.awayScore}
+            </SizableText>
+          </XStack>
+        ) : (
+          <SizableText style={{ color: C.muted, fontSize: 11 }}>
+            {match.venue.split(',')[0]}
           </SizableText>
-          <SizableText size="$4" fontWeight="800" color="$color12">
-            {match.homeScore} – {match.awayScore}
-          </SizableText>
-        </XStack>
-      )}
+        )}
 
-      <SizableText size="$1" color="$color8" style={{ textAlign: 'center' }}>
-        {kickoffLabel} · {match.venue.split(',')[0]}
-      </SizableText>
-
-      {/* Action area */}
-      {isFinished && existingPrediction?.pointsAwarded != null ? (
-        <XStack justify="center" gap="$3" items="center">
+        {/* Points badge or submit button */}
+        {hasPts ? (
           <Animated.View style={animatedStyle}>
             <XStack
-              bg={existingPrediction.pointsAwarded === 3 ? '$green3' : existingPrediction.pointsAwarded === 1 ? '$blue3' : '$color3'}
-              borderColor={existingPrediction.pointsAwarded === 3 ? '$green7' : existingPrediction.pointsAwarded === 1 ? '$blue7' : '$color6'}
-              borderWidth={1}
-              rounded="$10"
-              px="$3"
+              rounded={999 as any}
+              px="$2.5"
               py="$1"
+              style={{
+                backgroundColor:
+                  pts === 3 ? 'rgba(173,235,3,0.15)' :
+                  pts === 1 ? 'rgba(79,145,197,0.15)' :
+                  'rgba(112,114,135,0.15)',
+                borderWidth: 1,
+                borderColor:
+                  pts === 3 ? C.lime :
+                  pts === 1 ? '#4f91c5' :
+                  C.muted,
+              }}
             >
               <SizableText
-                size="$2"
-                color={existingPrediction.pointsAwarded === 3 ? '$green10' : existingPrediction.pointsAwarded === 1 ? '$blue10' : '$color9'}
-                fontWeight="600"
+                style={{
+                  fontFamily: 'var(--fwc-font-condensed, system-ui)',
+                  fontWeight: '700',
+                  fontSize: 12,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  color:
+                    pts === 3 ? C.lime :
+                    pts === 1 ? '#4f91c5' :
+                    C.muted,
+                }}
               >
-                {existingPrediction.pointsAwarded === 3
-                  ? '✓ Exact score · +3 pts'
-                  : existingPrediction.pointsAwarded === 1
-                  ? '✓ One score correct · +1 pt'
-                  : '✗ Wrong · +0 pts'}
+                {pts === 3 ? '+ 3 PTS EXACT' : pts === 1 ? '+ 1 PT' : '+ 0 PTS'}
               </SizableText>
             </XStack>
           </Animated.View>
-          {match.avgHomeScore != null && (
-            <SizableText size="$1" color="$color8">
-              Community avg: {match.avgHomeScore}–{match.avgAwayScore}
+        ) : !isLocked ? (
+          <XStack
+            rounded={999 as any}
+            px="$3"
+            py="$1.5"
+            cursor="pointer"
+            onPress={() => onConfirm(match.id, homeScore, awayScore, existingPrediction?.id)}
+            style={{ backgroundColor: C.lime }}
+            hoverStyle={{ backgroundColor: C.limeDark } as any}
+            pressStyle={{ opacity: 0.85 } as any}
+          >
+            <SizableText
+              style={{
+                fontFamily: 'var(--fwc-font-display, system-ui)',
+                fontWeight: '800',
+                fontSize: 13,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: C.ink,
+              }}
+            >
+              {existingPrediction ? 'UPDATE' : 'PREDICT'}
             </SizableText>
-          )}
-        </XStack>
-      ) : isLocked ? (
-        match.avgHomeScore != null ? (
-          <SizableText size="$1" color="$color8" style={{ textAlign: 'center' }}>
-            Community avg: {match.avgHomeScore}–{match.avgAwayScore}
-          </SizableText>
-        ) : null
-      ) : (
-        <Button
-          size="$2"
-          theme="blue"
-          rounded="$10"
-          onPress={() => onConfirm(match.id, homeScore, awayScore, existingPrediction?.id)}
-        >
-          {existingPrediction ? 'Update Prediction' : 'Submit Prediction'}
-        </Button>
-      )}
+          </XStack>
+        ) : existingPrediction && !isFinished ? (
+          <XStack
+            rounded={999 as any}
+            px="$2.5"
+            py="$0.5"
+            style={{ backgroundColor: 'rgba(173,235,3,0.1)', borderWidth: 1, borderColor: C.lime }}
+          >
+            <SizableText
+              style={{
+                fontFamily: 'var(--fwc-font-condensed, system-ui)',
+                fontWeight: '700',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: 0.8,
+                color: C.lime,
+              }}
+            >
+              LOCKED IN
+            </SizableText>
+          </XStack>
+        ) : null}
+      </XStack>
     </YStack>
   )
 }
