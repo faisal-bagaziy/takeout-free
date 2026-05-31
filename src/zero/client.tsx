@@ -96,17 +96,14 @@ const ProvideZeroImpl = ({ children }: { children: ReactNode }) => {
       authData={stableAuthData}
       cacheURL={ZERO_SERVER_URL}
       {...(unstable_batchedUpdates ? { batchViewUpdates: unstable_batchedUpdates } : {})}
-      onClientStateNotFound={useCallback((reason?: string) => {
-        const description =
-          reason ||
-          'The local data needed to keep this page in sync is no longer available.'
-        console.error('[zero] client state not found', { reason: description })
-        setZeroDisabledByError(true)
-        showClientDataErrorOnce({
-          key: 'zero-client-state-not-found',
-          title: 'Sync Error',
-          description,
-        })
+      onClientStateNotFound={useCallback(async (reason?: string) => {
+        console.warn('[zero] client state not found, clearing local db and reloading', reason)
+        try {
+          await dropAllDatabases()
+        } catch (e) {
+          console.error('[zero] failed to drop databases', e)
+        }
+        window.location.reload()
       }, [])}
       onUpdateNeeded={useCallback((reason?: { type?: string; message?: string }) => {
         const description = [
@@ -181,54 +178,70 @@ export const ProvideZero = ({ children }: { children: ReactNode }) => (
 )
 
 let lastConnectionState: 'disconnected' | 'connected' | 'idle' = 'idle'
+let hasEverConnected = false
+let disconnectedAt: number | null = null
 
 const announceDisconnected = debounce(() => {
   if (lastConnectionState !== 'disconnected') return
-  showToast(`Disconnected!`, {
-    type: 'error',
-  })
+  showToast(`Disconnected!`, { type: 'error' })
 }, 3000)
 
-let hasEverConnected = false
+// True singleton: subscribe once for the lifetime of the module.
+// Never unsubscribed — Zero itself is a module-level singleton that lives
+// as long as the app. Any React component mounting/unmounting due to
+// navigation must not add or remove this subscription.
+let connectionMonitorInitialized = false
+
+function initConnectionMonitor() {
+  if (connectionMonitorInitialized) return
+  connectionMonitorInitialized = true
+
+  zero.connection.state.subscribe((connectionState) => {
+    if (connectionState.name === 'connected') {
+      announceDisconnected.cancel()
+
+      // Only show reconnect toast after a sustained disconnect (> 3 s).
+      // Brief blips from auth token refresh or navigation don't count.
+      const disconnectedDuration = disconnectedAt != null ? Date.now() - disconnectedAt : 0
+      if (hasEverConnected && lastConnectionState === 'disconnected' && disconnectedDuration > 3000) {
+        showToast(`Re-connected!`)
+      }
+
+      hasEverConnected = true
+      lastConnectionState = 'connected'
+      disconnectedAt = null
+
+      if (typeof document !== 'undefined') {
+        document.body.dataset.zeroConnected = 'true'
+      }
+      return
+    }
+
+    if (
+      connectionState.name === 'disconnected' ||
+      connectionState.name === 'error' ||
+      connectionState.name === 'closed'
+    ) {
+      if (lastConnectionState !== 'disconnected') {
+        disconnectedAt = Date.now()
+      }
+      lastConnectionState = 'disconnected'
+      if (hasEverConnected) {
+        announceDisconnected()
+      }
+      return
+    }
+  })
+
+  zeroEvents.listen((event) => {
+    console.warn('zero event', event)
+  })
+}
 
 const ZeroConnectionMonitor = () => {
   useEffect(() => {
-    const unsub1 = zero.connection.state.subscribe((connectionState) => {
-      if (connectionState.name === 'connected') {
-        announceDisconnected.cancel()
-        if (hasEverConnected && lastConnectionState === 'disconnected') {
-          showToast(`Re-connected!`)
-        }
-        hasEverConnected = true
-        lastConnectionState = 'connected'
-        // signal readiness for e2e tests waiting on zero sync
-        if (typeof document !== 'undefined') {
-          document.body.dataset.zeroConnected = 'true'
-        }
-        return
-      }
-
-      if (
-        connectionState.name === 'disconnected' ||
-        connectionState.name === 'error' ||
-        connectionState.name === 'closed'
-      ) {
-        lastConnectionState = 'disconnected'
-        if (hasEverConnected) {
-          announceDisconnected()
-        }
-        return
-      }
-    })
-
-    const unsub2 = zeroEvents.listen((event) => {
-      console.warn('zero event', event)
-    })
-
-    return () => {
-      unsub1()
-      unsub2()
-    }
+    initConnectionMonitor()
+    // No cleanup — singleton subscription lives for the app lifetime.
   }, [])
 
   return null

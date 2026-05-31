@@ -9,6 +9,10 @@ export default {
     allowedHosts: ['host.docker.internal'],
   },
 
+  define: {
+    global: 'globalThis',
+  },
+
   optimizeDeps: {
     include: ['async-retry'],
     exclude: ['oxc-parser'],

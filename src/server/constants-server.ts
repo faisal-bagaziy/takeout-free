@@ -1,1 +1,1 @@
-export const ADMIN_WHITELIST = new Set(['your-email@example.com', 'admin@example.com'])
+export const ADMIN_WHITELIST = new Set(['faisalbagaziy@gmail.com', 'admin@example.com'])

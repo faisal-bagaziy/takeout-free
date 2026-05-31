@@ -8,41 +8,60 @@ type Result =
     }
 
 /**
- * Login with email and password.
+ * Login with email and password. Auto-creates account if user doesn't exist yet.
  */
 export async function passwordLogin(email: string, password: string): Promise<Result> {
-  const { error } = await authClient.signIn.email({
-    email,
-    password,
-  })
+  const { error: signInError } = await authClient.signIn.email({ email, password })
 
-  if (!error) {
+  if (!signInError) {
     return { success: true }
   }
 
-  const { code, message } = standardizeBetterAuthError(error)
+  const { code: signInCode } = standardizeBetterAuthError(signInError)
 
-  switch (code) {
-    case 'INVALID_EMAIL_OR_PASSWORD':
+  // Better Auth returns INVALID_EMAIL_OR_PASSWORD for both wrong password and
+  // unknown email. Try sign-up so new users don't have to use a separate form.
+  if (signInCode === 'INVALID_EMAIL_OR_PASSWORD') {
+    const name = email.split('@')[0]
+    const { error: signUpError } = await authClient.signUp.email({ email, password, name })
+
+    if (!signUpError) {
+      return { success: true }
+    }
+
+    const { code: signUpCode } = standardizeBetterAuthError(signUpError)
+
+    // Sign-up failed because email already exists → wrong password
+    if (signUpCode === 'USER_ALREADY_EXISTS') {
       return {
         success: false,
         error: {
-          code,
+          code: signInCode,
           title: 'Incorrect Password',
           message: 'The password you entered is incorrect. Please try again.',
         },
       }
-
-    default: {
-      return {
-        success: false,
-        error: {
-          code,
-          title: 'An Error Occurred',
-          message: `Failed to log in: "${message}" (${code}). Please try again.`,
-        },
-      }
     }
+
+    const { message } = standardizeBetterAuthError(signUpError)
+    return {
+      success: false,
+      error: {
+        code: signUpCode,
+        title: 'Sign Up Failed',
+        message: `Could not create account: "${message}" (${signUpCode}).`,
+      },
+    }
+  }
+
+  const { message } = standardizeBetterAuthError(signInError)
+  return {
+    success: false,
+    error: {
+      code: signInCode,
+      title: 'An Error Occurred',
+      message: `Failed to log in: "${message}" (${signInCode}). Please try again.`,
+    },
   }
 }
 

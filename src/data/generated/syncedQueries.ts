@@ -2,22 +2,21 @@
 // server-side query definitions with validators
 import { defineQuery, defineQueries } from '@rocicorp/zero'
 import * as v from 'valibot'
-
 import * as Queries from './groupedQueries'
 
 const todo = {
+  todoById: defineQuery(
+    v.object({
+      todoId: v.string(),
+    }),
+    ({ args }) => Queries.todo.todoById(args),
+  ),
   todosByUserId: defineQuery(
     v.object({
       userId: v.string(),
       limit: v.optional(v.number()),
     }),
     ({ args }) => Queries.todo.todosByUserId(args),
-  ),
-  todoById: defineQuery(
-    v.object({
-      todoId: v.string(),
-    }),
-    ({ args }) => Queries.todo.todoById(args),
   ),
 }
 
@@ -36,7 +35,71 @@ const user = {
   ),
 }
 
+const predictions = {
+  matchesByMatchday: defineQuery(
+    v.object({
+      matchday: v.nullable(v.number()),
+    }),
+    ({ args }) => Queries.predictions.matchesByMatchday(args),
+  ),
+  allMatches: defineQuery(
+    ({ args }) => Queries.predictions.allMatches(),
+  ),
+  predictionsByUser: defineQuery(
+    v.object({
+      userId: v.string(),
+    }),
+    ({ args }) => Queries.predictions.predictionsByUser(args),
+  ),
+  predictionByUserAndMatch: defineQuery(
+    v.object({
+      userId: v.string(),
+      matchId: v.string(),
+    }),
+    ({ args }) => Queries.predictions.predictionByUserAndMatch(args),
+  ),
+  communityPredictionsForMatch: defineQuery(
+    v.object({
+      matchId: v.string(),
+    }),
+    ({ args }) => Queries.predictions.communityPredictionsForMatch(args),
+  ),
+}
+
+const leaderboard = {
+  leaderboardAll: defineQuery(
+    v.object({
+      limit: v.optional(v.number()),
+    }),
+    ({ args }) => Queries.leaderboard.leaderboardAll(args),
+  ),
+  leaderboardByUserId: defineQuery(
+    v.object({
+      userId: v.string(),
+    }),
+    ({ args }) => Queries.leaderboard.leaderboardByUserId(args),
+  ),
+  followingByUser: defineQuery(
+    v.object({
+      followerId: v.string(),
+    }),
+    ({ args }) => Queries.leaderboard.followingByUser(args),
+  ),
+}
+
+const feed = {
+  recentPredictions: defineQuery(
+    v.object({
+      limit: v.optional(v.number()),
+    }),
+    ({ args }) => Queries.feed.recentPredictions(args),
+  ),
+}
+
 export const queries = defineQueries({
   todo,
   user,
+  predictions,
+  leaderboard,
+  feed,
 })

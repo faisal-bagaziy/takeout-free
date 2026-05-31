@@ -1,5 +1,5 @@
 import { Link, usePathname } from 'one'
-import { useMedia, XStack, View } from 'tamagui'
+import { SizableText, XStack } from 'tamagui'
 
 import { Pressable } from '~/interface/buttons/Pressable'
 import { HouseIcon } from '~/interface/icons/phosphor/HouseIcon'
@@ -10,37 +10,48 @@ import type { Href } from 'one'
 type TabRoute = {
   name: string
   href: Href
-  icon: any
+  label?: string
+  icon?: any
+  match?: string
 }
 
 const routes: TabRoute[] = [
-  { name: 'home', href: '/home/feed', icon: HouseIcon },
-  { name: 'profile', href: '/home/settings', icon: UserCircleIcon },
+  { name: 'feed', href: '/home/feed', label: 'Feed', icon: HouseIcon, match: '/home/feed' },
+  { name: 'predict', href: '/home/predict', label: 'Predict', match: '/home/predict' },
+  { name: 'leaderboard', href: '/home/leaderboard', label: 'Leaderboard', match: '/home/leaderboard' },
+  { name: 'profile', href: '/home/settings', icon: UserCircleIcon, match: '/home/settings' },
 ]
 
 export function NavigationTabs() {
   const pathname = usePathname()
-  const media = useMedia()
-  const iconSize = media.sm ? 24 : 20
-
-  const currentTab =
-    routes.find((r) => pathname.startsWith(r.href as string))?.name ?? 'home'
 
   return (
-    <XStack gap="$2">
+    <XStack gap="$1">
       {routes.map((route) => {
         const Icon = route.icon
-        const isActive = currentTab === route.name
+        const isActive = pathname.startsWith(route.match ?? (route.href as string))
         return (
           <Link key={route.name} href={route.href}>
             <Pressable
-              px="$4"
+              px="$3"
               py="$2"
               rounded="$4"
               bg={isActive ? '$color3' : 'transparent'}
               hoverStyle={{ bg: '$color2' }}
+              flexDirection="row"
+              gap="$1.5"
+              items="center"
             >
-              <Icon size={iconSize} color={isActive ? '$color12' : '$color10'} />
+              {Icon && <Icon size={18} color={isActive ? '$color12' : '$color10'} />}
+              {route.label && (
+                <SizableText
+                  size="$2"
+                  fontWeight={isActive ? '700' : '500'}
+                  color={isActive ? '$color12' : '$color10'}
+                >
+                  {route.label}
+                </SizableText>
+              )}
             </Pressable>
           </Link>
         )

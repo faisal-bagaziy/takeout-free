@@ -7,3 +7,6 @@
  */
 export * as todo from '../queries/todo'
 export * as user from '../queries/user'
+export * as predictions from '../queries/predictions'
+export * as leaderboard from '../queries/leaderboard'
+export * as feed from '../queries/feed'

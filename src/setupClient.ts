@@ -1,5 +1,9 @@
 import '~/features/storage/setupStorage'
 import '~/helpers/crypto/polyfill'
+import { Buffer } from 'buffer'
+if (typeof globalThis.Buffer === 'undefined') {
+  globalThis.Buffer = Buffer
+}
 
 import { setupDev } from 'tamagui'
 

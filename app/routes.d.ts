@@ -16,8 +16,14 @@ declare module 'one' {
         | `/(app)/home/(tabs)`
         | `/(app)/home/(tabs)/feed`
         | `/(app)/home/(tabs)/feed/`
+        | `/(app)/home/(tabs)/leaderboard`
+        | `/(app)/home/(tabs)/predict`
+        | `/(app)/home/admin`
+        | `/(app)/home/admin/`
         | `/(app)/home/feed`
         | `/(app)/home/feed/`
+        | `/(app)/home/leaderboard`
+        | `/(app)/home/predict`
         | `/(app)/home/settings`
         | `/(app)/home/settings/`
         | `/(app)/home/settings/blocked-users`
@@ -30,8 +36,14 @@ declare module 'one' {
         | `/home/(tabs)`
         | `/home/(tabs)/feed`
         | `/home/(tabs)/feed/`
+        | `/home/(tabs)/leaderboard`
+        | `/home/(tabs)/predict`
+        | `/home/admin`
+        | `/home/admin/`
         | `/home/feed`
         | `/home/feed/`
+        | `/home/leaderboard`
+        | `/home/predict`
         | `/home/settings`
         | `/home/settings/`
         | `/home/settings/blocked-users`
